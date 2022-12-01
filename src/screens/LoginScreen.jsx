@@ -1,38 +1,66 @@
+import { signInWithEmailAndPassword } from "firebase/auth";
 import React, { useState } from "react";
 import { TouchableOpacity, StyleSheet, Text, View } from "react-native";
-import { Button, TextInput } from "react-native-paper";
+import { Button, HelperText, Snackbar, TextInput } from "react-native-paper";
+import { auth } from "../config/firebase";
 
 export const LoginScreen = ({ navigation }) => {
-  const [email, setEmail] = useState({ value: "", error: "" });
-  const [password, setPassword] = useState({ value: "", error: "" });
+  // const [email, setEmail] = useState("vazio@vazio.com");
+  const [email, setEmail] = useState({
+    value: "",
+    error: "VOCE AINDA NAO DIGITOU SEU MANE",
+  });
+  const [password, setPassword] = useState({
+    value: "",
+    error: "",
+  });
+  const [deuErro, setDeuErro] = useState("");
 
-
-
-
-
-
-  
+//é quando o usuario aperta o botao
   const _onLoginPressed = () => {
     console.log("LoginIniciado");
     // navigation.navigate("Dashboard");
+
+    if (email.value === "" || password.value === "") {
+      setEmail({ ...email, error: "Entre com um e-mail válido" });
+      setPassword({ ...password, error: "Entre com uma senha" });
+      return;
+    }
+    loginComEmailESenha();
   };
+
+  async function loginComEmailESenha() {
+    signInWithEmailAndPassword(auth, email.value, password.value)
+      .then((userCredential) => {
+        // Signed in
+        const user = userCredential.user;
+        navigation.navigate('Home') //->serve para navegar até outro lugar//
+        // ...
+      })
+      .catch((error) => {
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        setDeuErro(errorMessage); 
+      });
+  }
 
   return (
     <View style={styles.container}>
+      <HelperText type="error">{deuErro}</HelperText>
       <TextInput
-        label="Email"
-        returnKeyType="next"
+        label="Digite seu E-mail"
         value={email.value}
         onChangeText={(text) => setEmail({ value: text, error: "" })}
         error={!!email.error}
         errorText={email.error}
-        autoCapitalize="none"
+        style={styles.input}
+        /* não essenciais  */
+        returnKeyType="next"
         autoCompleteType="email"
         textContentType="emailAddress"
         keyboardType="email-address"
-        style={styles.input}
       />
-
+      <HelperText visible={!!email.error}>{email.error}</HelperText>
       <TextInput
         label="Senha"
         returnKeyType="done"
@@ -43,7 +71,6 @@ export const LoginScreen = ({ navigation }) => {
         secureTextEntry
         style={styles.input}
       />
-
       <View style={styles.esqueceuSenha}>
         <TouchableOpacity
           onPress={() => navigation.navigate("EsqueceuSenhaScreen")}
@@ -51,11 +78,9 @@ export const LoginScreen = ({ navigation }) => {
           <Text style={styles.label}>Esqueceu sua senha?</Text>
         </TouchableOpacity>
       </View>
-
       <Button mode="contained" onPress={_onLoginPressed}>
         Login
       </Button>
-
       <View style={styles.row}>
         <Text style={styles.label}>Não possui uma conta? </Text>
         <TouchableOpacity onPress={() => navigation.navigate("RegisterScreen")}>
@@ -74,6 +99,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 26,
     flex: 1,
     justifyContent: "center",
+    backgroundColor: "#41BFB3"
   },
   esqueceuSenha: {
     width: "100%",
@@ -86,6 +112,7 @@ const styles = StyleSheet.create({
   },
   input: {
     width: "100%",
+    marginTop: "7px"
   },
   label: {
     color: "black",
